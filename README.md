@@ -40,7 +40,7 @@ No installation, no build step. Open `index.html` in any modern browser.
 
 | Setting | Value |
 |---|---|
-| API endpoint | `https://osiris-code.com/app/v1/chat/completions` |
+| API endpoint | `https://ai.osiris-code.com/v1/chat/completions` |
 | Model | `claude-opus-4.6` |
 | API key storage | Browser `localStorage` (never persisted server-side) |
 
