@@ -19,7 +19,8 @@ if [ ! -d "node_modules" ]; then
   npm install --silent
 fi
 
-PORT=$PORT node server.js &
+PORT=$PORT node server.js </dev/null >cyberflash.log 2>&1 &
 echo $! > "$PID_FILE"
 
 echo "CyberFlash started (PID $(cat $PID_FILE)) → http://localhost:$PORT"
+echo "Logs: cyberflash.log"
