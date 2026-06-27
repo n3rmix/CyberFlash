@@ -52,7 +52,7 @@ Then open **http://localhost:3000** in your browser.
 |---|---|
 | Upstream API | `https://ai.osiris-code.com/v1/chat/completions` |
 | Local proxy | `http://localhost:3000/proxy/v1/chat/completions` |
-| Model | `claude-opus-4.6` |
+| Model | `glm-5.0-turbo` |
 | API key storage | Browser `localStorage` (never persisted server-side) |
 
 ---
