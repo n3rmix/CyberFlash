@@ -1,47 +1,54 @@
 # CyberFlash ⚡
 
-**Executive-grade cybersecurity flash reports, generated in seconds.**
+**Executive-grade cybersecurity situation reports, generated in seconds.**
 
-CyberFlash is a single-page web application that uses AI to produce concise, actionable cybersecurity intelligence reports scoped to a specific geography and sector. Reports are written for C-suite executives and senior business leaders — not security engineers.
+CyberFlash is a single-page web application that uses AI to produce structured, decision-ready cybersecurity intelligence reports scoped to a specific geography and sector. Reports are written for C-suite executives and senior business leaders — not security engineers.
 
 ---
 
 ## What it does
 
-Select a geography, sector, and threat focus. CyberFlash queries the Osiris AI API and returns a structured flash report covering:
+Select a geography, sector, and threat focus. CyberFlash queries the Osiris AI API and returns a full SITREP covering:
 
 | Section | What you get |
 |---|---|
-| **Executive Summary** | 4–6 paragraph structured summary: central development, key facts, adversarial context, defender posture, analytical assessment, call to action |
-| **Executive Judgments** | Key findings, medium- and long-term impact, and priority actions — decision-ready, no generic advice |
-| **Key Cybersecurity Events** | Named incidents with date, actors, summary, impact, and attribution confidence |
-| **Strategic Context** | Geopolitical, nation-state, and regulatory context framing the events — interpretation over fact recitation |
-| **Critical Infrastructure Risk Outlook** | Sector-by-sector threat level table with analytical synthesis |
+| **Executive Summary** | 6-paragraph structured summary: central development, key facts, adversarial context, defender posture, analytical assessment, and call to action |
+| **Executive Judgments** | Key findings, medium- and long-term impact bullets, and priority actions — decision-ready, no generic advice |
+| **Key Cybersecurity Events** | Named incidents with date, actors, summary, concrete impact list, and attribution confidence rating |
+| **Strategic Context** | Nation-state actor breakdowns with escalation risk ratings, plus geopolitical and regulatory framing |
+| **Critical Infrastructure Risk Outlook** | Sector-by-sector threat level table (CRITICAL → LOW) with analytical synthesis |
 
-Reports are based on the **last 6 months** of threat intelligence and are generated fresh each time.
-
-> If there is insufficient data to give a genuinely useful recommendation, the report says so explicitly rather than padding with vague advice.
+Reports are based on the **last 6 months** of threat intelligence. Sections are omitted rather than padded when source data is insufficient.
 
 ---
 
 ## Getting started
-
-A small Node.js proxy server is required to forward requests to the Osiris API (the API does not allow direct browser requests due to CORS).
 
 **Prerequisites:** [Node.js](https://nodejs.org) 18+
 
 ```bash
 git clone https://github.com/n3rmix/cyberflash
 cd cyberflash
-npm install
-npm start
+./start.sh
 ```
 
 Then open **http://localhost:3000** in your browser.
 
-1. Enter your Osiris API key when prompted — stored in `localStorage`, forwarded only to `ai.osiris-code.com`
-2. Select a geography and sector
+1. Enter your Osiris API key when prompted — stored in your browser's `localStorage` only
+2. Select a geography, sector, and threat focus
 3. Click **Generate Flash Report**
+
+---
+
+## Start & stop
+
+```bash
+./start.sh            # install deps if needed, start on port 3000
+PORT=8080 ./start.sh  # use a custom port
+./stop.sh             # stop the server
+```
+
+Both scripts are idempotent. `start.sh` will not launch a second instance if one is already running. `stop.sh` handles missing or stale state gracefully.
 
 ---
 
@@ -52,7 +59,9 @@ Then open **http://localhost:3000** in your browser.
 | Upstream API | `https://ai.osiris-code.com/v1/chat/completions` |
 | Local proxy | `http://localhost:3000/proxy/v1/chat/completions` |
 | Model | `glm-5.0-turbo` |
-| API key storage | Browser `localStorage` (never persisted server-side) |
+| API key storage | Browser `localStorage` — never persisted server-side |
+
+A local proxy server is required because the Osiris API does not send CORS headers, which blocks direct browser requests. The proxy forwards calls server-side where CORS does not apply.
 
 ---
 
@@ -72,4 +81,4 @@ Use the **Print / Export PDF** button to save or share a report. The print style
 
 ## Privacy
 
-Your API key is stored exclusively in your browser's `localStorage`. It is transmitted only to `osiris-code.com` as a Bearer token on each report request. No data is collected or logged by this application.
+Your API key is stored exclusively in your browser's `localStorage`. It is transmitted only to `ai.osiris-code.com` as a Bearer token on each report request. No data is collected or logged by this application.
