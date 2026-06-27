@@ -397,14 +397,75 @@
 
     .section-content strong { color: #f1f5f9; font-weight: 700; }
 
-    .section-content h4 {
-      font-size: 0.85rem;
+    .section-content h3 {
+      font-size: 0.95rem;
       font-weight: 700;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin: 1rem 0 0.5rem;
+      color: var(--text);
+      margin: 1.5rem 0 0.6rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
     }
+
+    .section-content h3:first-child { margin-top: 0; }
+
+    .section-content h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 1.1rem 0 0.4rem;
+    }
+
+    .section-content hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.25rem 0;
+    }
+
+    .section-content code {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      font-family: var(--mono);
+      font-size: 0.82em;
+      color: #93c5fd;
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .section-content table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .section-content th {
+      background: var(--surface-2);
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.6rem 0.9rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-content td {
+      padding: 0.65rem 0.9rem;
+      border-bottom: 1px solid rgba(30,45,69,0.6);
+      vertical-align: top;
+      color: var(--text);
+    }
+
+    .section-content tr:last-child td { border-bottom: none; }
+    .section-content tr:hover td { background: rgba(255,255,255,0.02); }
 
     /* Risk level badge */
     .risk-badge {
@@ -767,11 +828,11 @@
       <div>
         <div class="loading-text" id="loading-text">Analyzing threat intelligence...</div>
         <div class="loading-steps" style="margin-top:1rem">
-          <div class="loading-step" id="step-1">⬜ Gathering regional threat data</div>
-          <div class="loading-step" id="step-2">⬜ Correlating sector-specific incidents</div>
-          <div class="loading-step" id="step-3">⬜ Assessing business impact</div>
-          <div class="loading-step" id="step-4">⬜ Formulating actionable recommendations</div>
-          <div class="loading-step" id="step-5">⬜ Finalizing executive report</div>
+          <div class="loading-step" id="step-1">⬜ Gathering regional threat intelligence</div>
+          <div class="loading-step" id="step-2">⬜ Analyzing key cybersecurity events</div>
+          <div class="loading-step" id="step-3">⬜ Assessing adversarial context</div>
+          <div class="loading-step" id="step-4">⬜ Evaluating infrastructure risk outlook</div>
+          <div class="loading-step" id="step-5">⬜ Drafting executive judgments</div>
         </div>
       </div>
     </div>
@@ -878,7 +939,7 @@ document.getElementById('modal-api-key').addEventListener('keydown', function(e)
 
 // ── Report Generation ──────────────────────────────────────────────────────
 function buildPrompt(geography, sector, focus) {
-  return `You are a senior cybersecurity intelligence analyst producing a FLASH REPORT for C-suite executives and senior business stakeholders.
+  return `You are a senior cybersecurity intelligence analyst producing a SITREP (Situation Report) for C-suite executives, board members, and senior business leaders.
 
 REPORT PARAMETERS:
 - Geography: ${geography}
@@ -889,39 +950,105 @@ REPORT PARAMETERS:
 AUDIENCE: CEOs, CFOs, Board Members, and Senior Business Leaders — NOT technical security teams.
 
 CRITICAL RULES:
-1. Every recommendation MUST be specific, named, and immediately actionable. No generic advice.
-2. If you cannot provide a genuinely useful, specific recommendation for any sub-point, explicitly state: "Insufficient sector-specific data to provide targeted guidance at this time." DO NOT pad with vague advice.
-3. Never say: "update your systems", "patch regularly", "improve security awareness", "implement best practices", "enhance monitoring", or any similar generic statement.
-4. Focus on BUSINESS IMPACT: financial exposure, operational disruption, regulatory consequences, reputational damage.
-5. Name specific threat actors, malware families, CVEs, or incidents where relevant and known.
-6. Use concrete numbers and percentages where available from known incidents.
+1. NEVER use vague language. Every sentence must carry analytical weight.
+2. Avoid filler phrases such as "it is important to note", "this highlights the need for", "organizations should consider", or any similar constructions.
+3. Every Priority Action MUST be specific, named, and immediately actionable. NEVER include generic recommendations such as "improve security awareness", "update your systems", "patch regularly", or "implement best practices". If no specific action can be justified, omit it.
+4. Only document events supported by known, confirmed incidents or disclosures from the last 6 months. Do not fabricate or infer events not grounded in real intelligence.
+5. Name specific threat actors, malware families, CVEs, campaigns, or incidents where known.
+6. Use concrete numbers, dates, and percentages where available.
+7. If source material is insufficient for any subsection, omit it rather than speculating.
 
-OUTPUT FORMAT — Use this exact structure with these exact markdown headers:
+OUTPUT FORMAT — Use this exact structure with these exact markdown headers. Do not add, rename, or reorder sections.
+
+---
 
 ## Executive Summary
-[3-5 sentences. The single most important thing this leadership team must understand right now. Lead with business risk, not technical details. Include a severity/urgency assessment.]
 
-## Threat Overview
-[Named threat actors, campaigns, or malware families active in this geography/sector over the last 6 months. Include attack vectors and initial access methods. Keep technical jargon minimal — explain in business terms.]
+Write a concise, high-impact executive summary of 4–6 paragraphs structured as follows:
 
-## Technical Details
-[Key vulnerabilities, attack chains, or TTPs that are operationally relevant. Only include what a CISO would need to brief the board about. Be specific — name CVEs, tools, or techniques only if they have direct business relevance.]
+**Paragraph 1 — Central Development:** Describe the central event, development, or threat that defines this SITREP. Establish why it matters strategically — what threshold has been crossed or what has materially changed.
 
-## Impact Assessment
-[Quantified or estimated financial and operational impact. Reference real incidents or breach costs from this geography/sector where possible. Include regulatory exposure (GDPR, HIPAA, NIS2, etc. as applicable).]
+**Paragraph 2 — Key Facts:** Summarize the most critical confirmed facts, incidents, or disclosures. Be specific — include dates, actors, and impacts where available.
 
-## Mitigation & Response
-[ONLY specific, named, actionable items. Examples of acceptable recommendations: "Disable NTLM authentication in Active Directory via Group Policy Object GPO > Computer Configuration > Windows Settings > Security Settings > Local Policies > Security Options > Network security: Restrict NTLM". Examples of UNACCEPTABLE: "improve your security posture", "train your employees", "update your software". If you cannot provide specific actionable guidance, state: "No high-confidence specific recommendations available for this threat profile — engage a specialized incident response firm with ${sector} sector expertise."]
+**Paragraph 3 — Adversarial Context:** Describe how adversaries are positioned to exploit or have already exploited the situation.
 
-Be direct. Be specific. Prioritize ruthlessly. This report will be read in under 10 minutes by people making resource allocation decisions.`;
+**Paragraph 4 — Defender Posture:** Describe the current state of defensive response, including any coalitions, initiatives, or mitigations underway, and their limitations.
+
+**Paragraph 5 — Analytical Assessment:** Deliver the core analytical judgment — what this means for the organization's risk posture, what has fundamentally changed, and why existing models may be insufficient.
+
+**Paragraph 6 — Call to Action:** State clearly what minimum action is required now. Frame urgency without being alarmist.
+
+---
+
+## Executive Judgments
+
+### Key Findings
+List 5–7 bullet points representing the most materially significant conclusions. Each finding must be a standalone, declarative statement of analytical judgment referencing specific evidence or events. Avoid hedging unless confidence genuinely warrants it.
+
+### Anticipated Impact
+
+#### Medium-Term Impact
+List 3–5 bullet points describing expected impacts over the next 3–12 months — how the threat landscape, defender posture, or operational environment will shift.
+
+#### Long-Term Impact
+List 3–5 bullet points describing structural or systemic changes expected beyond 12 months — operating model implications, capability diffusion, and strategic risk evolution.
+
+### Priority Actions
+List 4–6 bullet points representing the minimum necessary actions for leadership to consider immediately. Each must be specific, outcome-oriented, and directly tied to the findings above. Do NOT include generic recommendations.
+
+---
+
+## Key Cybersecurity Events
+
+Document the most significant cybersecurity incidents, disclosures, or developments from the last 6 months relevant to ${geography} and the ${sector} sector. For each event use this exact structure:
+
+### [Event Name]
+- **Date:** [Date or date range]
+- **Actors Involved:** [Threat actors, organizations, or entities]
+- **Summary:** 2–4 sentences describing what happened, how it unfolded, and what was confirmed.
+- **Impact:** Bullet list of 3–5 specific, concrete impacts — operational, strategic, reputational, or systemic.
+- **Attribution:** [Confirmed / High Confidence / Moderate Confidence / Unconfirmed] — with brief justification.
+
+Include only events that are materially relevant. If fewer than three events are available, document what exists and note the limited event set. Do not fabricate events.
+
+---
+
+## Strategic Context
+
+Provide the broader geopolitical, technological, and operational context framing these events. Write in analytical prose organized into thematic subsections. Each subsection should open with a clear statement of the strategic dynamic, draw on evidence from the events above, and connect observed activity to broader trends or systemic implications. Do not restate facts already covered in Key Events — focus on interpretation and context.
+
+For each relevant nation-state actor or actor cluster, structure coverage as:
+- **Event Description:** What activity has been observed or reported
+- **Cybersecurity Implications:** What this means for defenders and the threat landscape
+- **Strategic Intent:** What the actor is assessed as trying to achieve and why
+- **Known Cyber Groups:** List relevant groups with sponsor and primary mission
+- **Target Sectors:** List sectors at elevated risk
+- **Potential Escalation Risk:** [CRITICAL / HIGH / MEDIUM-HIGH / MEDIUM / LOW-MEDIUM / LOW] with one-sentence justification
+
+Include a regulatory and governance context subsection where applicable. Omit any subsection for which the available evidence is insufficient.
+
+---
+
+## Critical Infrastructure Risk Outlook
+
+Produce a structured risk assessment table covering critical infrastructure sectors relevant to ${geography} and the ${sector} sector. Use this exact table format:
+
+| Sector | Threat Level | Key Vulnerabilities / Trends |
+|--------|-------------|------------------------------|
+
+Threat levels: CRITICAL / HIGH / ELEVATED / GUARDED / LOW
+
+After the table, write 2–3 sentences of analytical synthesis explaining the overarching pattern across sectors — what common factors are driving elevated risk, and what the convergence of threats means for defenders.
+
+Only include sectors for which there is substantive evidence. Do not populate rows with generic or speculative content.`;
 }
 
 const SECTION_CONFIG = [
-  { id: 'exec-summary', key: 'Executive Summary', number: '01', title: 'Executive Summary' },
-  { id: 'threat-overview', key: 'Threat Overview', number: '02', title: 'Threat Overview' },
-  { id: 'technical', key: 'Technical Details', number: '03', title: 'Technical Details' },
-  { id: 'impact', key: 'Impact Assessment', number: '04', title: 'Impact Assessment' },
-  { id: 'mitigation', key: 'Mitigation & Response', number: '05', title: 'Mitigation & Response' },
+  { id: 'exec-summary',   key: 'Executive Summary',                  number: '01', title: 'Executive Summary' },
+  { id: 'exec-judgments', key: 'Executive Judgments',                number: '02', title: 'Executive Judgments' },
+  { id: 'key-events',     key: 'Key Cybersecurity Events',           number: '03', title: 'Key Cybersecurity Events' },
+  { id: 'strategic',      key: 'Strategic Context',                  number: '04', title: 'Strategic Context' },
+  { id: 'risk-outlook',   key: 'Critical Infrastructure Risk Outlook', number: '05', title: 'Critical Infrastructure Risk Outlook' },
 ];
 
 function setState(state) {
@@ -1001,7 +1128,7 @@ async function generateReport() {
           }
         ],
         temperature: 0.3,
-        max_tokens: 3000,
+        max_tokens: 6000,
         stream: false,
       }),
       signal: currentController.signal,
@@ -1056,28 +1183,63 @@ function parseMarkdownSections(content) {
 }
 
 function markdownToHtml(text) {
-  return text
+  // Escape HTML first
+  let t = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    // Bold
+    .replace(/>/g, '&gt;');
+
+  // Tables — detect pipe-delimited blocks
+  t = t.replace(/((?:^\|.+\|\n?)+)/gm, tableBlock => {
+    const rows = tableBlock.trim().split('\n').filter(r => r.trim());
+    let html = '<div class="table-wrap"><table>';
+    rows.forEach((row, i) => {
+      if (/^\|[-| :]+\|$/.test(row.trim())) return; // separator row
+      const cells = row.split('|').filter((_, ci) => ci > 0 && ci < row.split('|').length - 1);
+      const tag = i === 0 ? 'th' : 'td';
+      html += '<tr>' + cells.map(c => `<${tag}>${inlineFormat(c.trim())}</${tag}>`).join('') + '</tr>';
+    });
+    html += '</table></div>';
+    return html;
+  });
+
+  // Horizontal rules
+  t = t.replace(/^---+$/gm, '<hr>');
+
+  // H3 subsection headers
+  t = t.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+  // H4 sub-subsection headers
+  t = t.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+
+  // Bullet lists (handle nested - items starting with spaces)
+  t = t.replace(/^[ \t]*[-•]\s+(.+)$/gm, '<li>$1</li>');
+  t = t.replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>');
+  // Wrap consecutive <li> in <ul>
+  t = t.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+
+  // Inline formatting
+  t = t.split('\n').map(line => {
+    if (/^<(h[34]|ul|li|hr|div|table)/.test(line.trim())) return line;
+    return inlineFormat(line);
+  }).join('\n');
+
+  // Paragraphs
+  t = t.split(/\n{2,}/).map(block => {
+    const trimmed = block.trim();
+    if (!trimmed) return '';
+    if (/^<(h[34]|ul|hr|div|table)/.test(trimmed)) return trimmed;
+    if (trimmed.startsWith('<li>')) return `<ul>${trimmed}</ul>`;
+    return `<p>${trimmed.replace(/\n/g, ' ')}</p>`;
+  }).join('\n');
+
+  return t;
+}
+
+function inlineFormat(s) {
+  return s
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Italic
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Headers h4
-    .replace(/^####\s+(.+)$/gm, '<h4>$1</h4>')
-    .replace(/^###\s+(.+)$/gm, '<h4>$1</h4>')
-    // Bullet lists
-    .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>')
-    // Wrap consecutive <li> in <ul>
-    .replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
-    // Paragraphs
-    .split(/\n{2,}/).map(block => {
-      if (block.startsWith('<ul>') || block.startsWith('<h4>')) return block;
-      if (!block.trim()) return '';
-      return `<p>${block.replace(/\n/g, ' ')}</p>`;
-    }).join('\n');
+    .replace(/`(.+?)`/g, '<code>$1</code>');
 }
 
 function renderReport(content, geography, sector, focus) {

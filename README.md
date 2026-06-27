@@ -12,11 +12,11 @@ Select a geography, sector, and threat focus. CyberFlash queries the Osiris AI A
 
 | Section | What you get |
 |---|---|
-| **Executive Summary** | The single most important thing leadership needs to know right now |
-| **Threat Overview** | Named threat actors, active campaigns, and attack vectors |
-| **Technical Details** | CISO-level specifics — CVEs, TTPs, and tools with business relevance |
-| **Impact Assessment** | Financial exposure, operational risk, and regulatory consequences |
-| **Mitigation & Response** | Named, actionable steps only — never generic advice |
+| **Executive Summary** | 4–6 paragraph structured summary: central development, key facts, adversarial context, defender posture, analytical assessment, call to action |
+| **Executive Judgments** | Key findings, medium- and long-term impact, and priority actions — decision-ready, no generic advice |
+| **Key Cybersecurity Events** | Named incidents with date, actors, summary, impact, and attribution confidence |
+| **Strategic Context** | Geopolitical, nation-state, and regulatory context framing the events — interpretation over fact recitation |
+| **Critical Infrastructure Risk Outlook** | Sector-by-sector threat level table with analytical synthesis |
 
 Reports are based on the **last 6 months** of threat intelligence and are generated fresh each time.
 
