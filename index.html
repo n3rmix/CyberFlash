@@ -1013,7 +1013,7 @@ async function generateReport() {
 
     if (!response.ok) {
       const errText = await response.text();
-      let errMsg = `API error ${response.status}`;
+      let errMsg = `API error ${response.status} (${response.statusText})`;
       try {
         const errJson = JSON.parse(errText);
         errMsg = errJson?.error?.message || errMsg;
@@ -1033,7 +1033,11 @@ async function generateReport() {
     if (err.name === 'AbortError') {
       setState('empty');
     } else {
-      document.getElementById('error-message').textContent = err.message;
+      let msg = err.message;
+      if (msg === 'Failed to fetch' || msg.toLowerCase().includes('networkerror')) {
+        msg = `Network error — could not reach ${API_BASE}.\n\nPossible causes:\n• The API base URL is incorrect\n• The server does not allow browser requests (CORS)\n• No internet connection\n\nCheck the Osiris docs for the correct endpoint URL.`;
+      }
+      document.getElementById('error-message').innerHTML = msg.replace(/\n/g, '<br>');
       setState('error');
     }
   } finally {
