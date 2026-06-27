@@ -27,12 +27,22 @@ Reports are based on the **last 6 months** of threat intelligence and are genera
 
 ## Getting started
 
-No installation, no build step. Open `index.html` in any modern browser.
+A small Node.js proxy server is required to forward requests to the Osiris API (the API does not allow direct browser requests due to CORS).
 
-1. **Get an API key** from [osiris-code.com](https://osiris-code.com)
-2. Open `index.html`
-3. Enter your API key when prompted — it is saved in your browser's `localStorage` and sent only to `osiris-code.com`
-4. Select a geography and sector, then click **Generate Flash Report**
+**Prerequisites:** [Node.js](https://nodejs.org) 18+
+
+```bash
+git clone https://github.com/n3rmix/cyberflash
+cd cyberflash
+npm install
+npm start
+```
+
+Then open **http://localhost:3000** in your browser.
+
+1. Enter your Osiris API key when prompted — stored in `localStorage`, forwarded only to `ai.osiris-code.com`
+2. Select a geography and sector
+3. Click **Generate Flash Report**
 
 ---
 
@@ -40,7 +50,8 @@ No installation, no build step. Open `index.html` in any modern browser.
 
 | Setting | Value |
 |---|---|
-| API endpoint | `https://ai.osiris-code.com/v1/chat/completions` |
+| Upstream API | `https://ai.osiris-code.com/v1/chat/completions` |
+| Local proxy | `http://localhost:3000/proxy/v1/chat/completions` |
 | Model | `claude-opus-4.6` |
 | API key storage | Browser `localStorage` (never persisted server-side) |
 

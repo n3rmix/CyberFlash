@@ -805,7 +805,7 @@
 
 <script>
 const STORAGE_KEY = 'cyberflash_api_key';
-const API_BASE = 'https://ai.osiris-code.com/v1';
+const API_BASE = '/proxy/v1';
 
 // ── State ──────────────────────────────────────────────────────────────────
 let apiKey = localStorage.getItem(STORAGE_KEY) || '';
@@ -1035,7 +1035,7 @@ async function generateReport() {
     } else {
       let msg = err.message;
       if (msg === 'Failed to fetch' || msg.toLowerCase().includes('networkerror')) {
-        msg = `Network error — could not reach ${API_BASE}.\n\nPossible causes:\n• The API base URL is incorrect\n• The server does not allow browser requests (CORS)\n• No internet connection\n\nCheck the Osiris docs for the correct endpoint URL.`;
+        msg = `Network error — could not reach the proxy server.\n\nMake sure the app is running via the Node.js server:\n\n  npm install\n  npm start\n\nThen open http://localhost:3000 instead of opening index.html directly.`;
       }
       document.getElementById('error-message').innerHTML = msg.replace(/\n/g, '<br>');
       setState('error');
