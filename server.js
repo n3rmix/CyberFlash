@@ -9,7 +9,24 @@ const OSIRIS_BASE = 'https://ai.osiris-code.com/v1';
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Proxy API calls to Osiris — avoids browser CORS restrictions
+// Proxy GET requests (e.g. /v1/models)
+app.get('/proxy/v1/:endpoint(*)', async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ error: { message: 'Missing Authorization header' } });
+
+  try {
+    const upstream = await fetch(`${OSIRIS_BASE}/${req.params.endpoint}`, {
+      method: 'GET',
+      headers: { 'Authorization': authHeader },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    res.status(502).json({ error: { message: `Proxy error: ${err.message}` } });
+  }
+});
+
+// Proxy POST requests (e.g. /v1/chat/completions)
 app.post('/proxy/v1/:endpoint(*)', async (req, res) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ error: { message: 'Missing Authorization header' } });
@@ -23,7 +40,6 @@ app.post('/proxy/v1/:endpoint(*)', async (req, res) => {
       },
       body: JSON.stringify(req.body),
     });
-
     const data = await upstream.json();
     res.status(upstream.status).json(data);
   } catch (err) {

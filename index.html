@@ -745,9 +745,19 @@
         <button class="toggle-visibility" onclick="toggleKeyVisibility('modal-api-key', this)" title="Toggle visibility">👁</button>
       </div>
     </div>
+    <div id="modal-models-wrap" style="display:none">
+      <div class="form-group" style="margin-top:1rem">
+        <label for="modal-model-select">Model</label>
+        <select id="modal-model-select"></select>
+      </div>
+      <div id="modal-models-error" style="font-size:0.8rem;color:#f87171;margin-top:0.4rem;display:none"></div>
+    </div>
+    <div id="modal-models-loading" style="display:none;font-size:0.8rem;color:var(--text-muted);margin-top:0.75rem">
+      ⏳ Fetching available models…
+    </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn-sm" onclick="saveApiKey()">Save Key</button>
+      <button class="btn-sm" id="modal-save-btn" onclick="saveApiKey()">Save Key</button>
     </div>
   </div>
 </div>
@@ -860,6 +870,14 @@
       </div>
 
       <div class="form-group">
+        <label for="model-select">Model</label>
+        <select id="model-select" onchange="localStorage.setItem('cyberflash_model', this.value)">
+          <option value="glm-5.0-turbo">glm-5.0-turbo</option>
+        </select>
+        <div id="model-loading" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;display:none">⏳ Loading models…</div>
+      </div>
+
+      <div class="form-group">
         <label for="period-preset">Period Covered</label>
         <select id="period-preset" onchange="onPeriodPresetChange()">
           <option value="30d">Last 30 days</option>
@@ -965,8 +983,11 @@ let lastReportParams = {};
 // ── Init ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   updateKeyStatus();
+  loadSavedModel();
   if (!apiKey) {
     setTimeout(openModal, 400);
+  } else {
+    initModels();
   }
 });
 
@@ -985,6 +1006,9 @@ function updateKeyStatus() {
 
 function openModal() {
   document.getElementById('modal-api-key').value = apiKey ? '•'.repeat(20) : '';
+  document.getElementById('modal-models-wrap').style.display = 'none';
+  document.getElementById('modal-models-loading').style.display = 'none';
+  document.getElementById('modal-models-error').style.display = 'none';
   document.getElementById('api-modal').classList.add('visible');
   setTimeout(() => document.getElementById('modal-api-key').focus(), 100);
 }
@@ -993,7 +1017,7 @@ function closeModal() {
   document.getElementById('api-modal').classList.remove('visible');
 }
 
-function saveApiKey() {
+async function saveApiKey() {
   const input = document.getElementById('modal-api-key').value.trim();
   if (!input || input.startsWith('•')) {
     closeModal();
@@ -1002,7 +1026,84 @@ function saveApiKey() {
   apiKey = input;
   localStorage.setItem(STORAGE_KEY, apiKey);
   updateKeyStatus();
-  closeModal();
+
+  // Fetch models with the new key
+  const saveBtn = document.getElementById('modal-save-btn');
+  saveBtn.disabled = true;
+  document.getElementById('modal-models-loading').style.display = 'block';
+  document.getElementById('modal-models-wrap').style.display = 'none';
+  document.getElementById('modal-models-error').style.display = 'none';
+
+  try {
+    const models = await fetchModels(apiKey);
+    populateModelSelectors(models);
+    document.getElementById('modal-models-wrap').style.display = 'block';
+  } catch (err) {
+    document.getElementById('modal-models-error').textContent = `Could not load models: ${err.message}`;
+    document.getElementById('modal-models-error').style.display = 'block';
+    document.getElementById('modal-models-wrap').style.display = 'none';
+  } finally {
+    document.getElementById('modal-models-loading').style.display = 'none';
+    saveBtn.disabled = false;
+  }
+}
+
+async function fetchModels(key) {
+  const res = await fetch(`${API_BASE}/models`, {
+    headers: { 'Authorization': `Bearer ${key}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  // Support both {data:[{id}]} and [{id}] shapes
+  const list = Array.isArray(data) ? data : (data.data || []);
+  if (!list.length) throw new Error('No models returned');
+  return list.map(m => m.id || m.name).filter(Boolean).sort();
+}
+
+function populateModelSelectors(models) {
+  const currentVal = document.getElementById('model-select').value;
+  [document.getElementById('model-select'), document.getElementById('modal-model-select')].forEach(sel => {
+    sel.innerHTML = '';
+    models.forEach(id => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = id;
+      if (id === currentVal) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  });
+  // Sync modal selection → sidebar selection on change
+  document.getElementById('modal-model-select').onchange = function() {
+    document.getElementById('model-select').value = this.value;
+    localStorage.setItem('cyberflash_model', this.value);
+    closeModal();
+  };
+}
+
+// Load saved model on init
+function loadSavedModel() {
+  const saved = localStorage.getItem('cyberflash_model');
+  if (saved) {
+    const sel = document.getElementById('model-select');
+    const existing = [...sel.options].find(o => o.value === saved);
+    if (existing) { sel.value = saved; return; }
+    const opt = document.createElement('option');
+    opt.value = saved; opt.textContent = saved; opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+// On init, if key exists, silently fetch and populate models
+async function initModels() {
+  if (!apiKey) return;
+  const loadEl = document.getElementById('model-loading');
+  loadEl.style.display = 'block';
+  try {
+    const models = await fetchModels(apiKey);
+    populateModelSelectors(models);
+    loadSavedModel();
+  } catch (_) { /* silent — model selector stays with default */ }
+  finally { loadEl.style.display = 'none'; }
 }
 
 function toggleKeyVisibility(inputId, btn) {
@@ -1273,7 +1374,7 @@ async function generateReport() {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'glm-5.0-turbo',
+        model: document.getElementById('model-select').value,
         messages: [
           {
             role: 'user',
