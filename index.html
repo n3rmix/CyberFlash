@@ -745,15 +745,13 @@
         <button class="toggle-visibility" onclick="toggleKeyVisibility('modal-api-key', this)" title="Toggle visibility">👁</button>
       </div>
     </div>
-    <div id="modal-models-wrap" style="display:none">
-      <div class="form-group" style="margin-top:1rem">
-        <label for="modal-model-select">Model</label>
-        <select id="modal-model-select"></select>
-      </div>
-      <div id="modal-models-error" style="font-size:0.8rem;color:#f87171;margin-top:0.4rem;display:none"></div>
-    </div>
-    <div id="modal-models-loading" style="display:none;font-size:0.8rem;color:var(--text-muted);margin-top:0.75rem">
-      ⏳ Fetching available models…
+    <div class="form-group" style="margin-top:1rem">
+      <label for="modal-model-select">Model</label>
+      <select id="modal-model-select">
+        <option value="glm-5.0-turbo">glm-5.0-turbo</option>
+      </select>
+      <div id="modal-models-loading" style="display:none;font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem">⏳ Fetching available models…</div>
+      <div id="modal-models-error" style="font-size:0.72rem;color:#f87171;margin-top:0.3rem;display:none"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal()">Cancel</button>
@@ -867,14 +865,6 @@
           <option value="nation-state and APT threats">Nation-State & APT</option>
           <option value="supply chain threats">Supply Chain Attacks</option>
         </select>
-      </div>
-
-      <div class="form-group">
-        <label for="model-select">Model</label>
-        <select id="model-select" onchange="localStorage.setItem('cyberflash_model', this.value)">
-          <option value="glm-5.0-turbo">glm-5.0-turbo</option>
-        </select>
-        <div id="model-loading" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;display:none">⏳ Loading models…</div>
       </div>
 
       <div class="form-group">
@@ -1006,7 +996,6 @@ function updateKeyStatus() {
 
 function openModal() {
   document.getElementById('modal-api-key').value = apiKey ? '•'.repeat(20) : '';
-  document.getElementById('modal-models-wrap').style.display = 'none';
   document.getElementById('modal-models-loading').style.display = 'none';
   document.getElementById('modal-models-error').style.display = 'none';
   document.getElementById('api-modal').classList.add('visible');
@@ -1031,17 +1020,14 @@ async function saveApiKey() {
   const saveBtn = document.getElementById('modal-save-btn');
   saveBtn.disabled = true;
   document.getElementById('modal-models-loading').style.display = 'block';
-  document.getElementById('modal-models-wrap').style.display = 'none';
   document.getElementById('modal-models-error').style.display = 'none';
 
   try {
     const models = await fetchModels(apiKey);
-    populateModelSelectors(models);
-    document.getElementById('modal-models-wrap').style.display = 'block';
+    populateModelSelector(models);
   } catch (err) {
     document.getElementById('modal-models-error').textContent = `Could not load models: ${err.message}`;
     document.getElementById('modal-models-error').style.display = 'block';
-    document.getElementById('modal-models-wrap').style.display = 'none';
   } finally {
     document.getElementById('modal-models-loading').style.display = 'none';
     saveBtn.disabled = false;
@@ -1060,50 +1046,43 @@ async function fetchModels(key) {
   return list.map(m => m.id || m.name).filter(Boolean).sort();
 }
 
-function populateModelSelectors(models) {
-  const currentVal = document.getElementById('model-select').value;
-  [document.getElementById('model-select'), document.getElementById('modal-model-select')].forEach(sel => {
-    sel.innerHTML = '';
-    models.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = id;
-      if (id === currentVal) opt.selected = true;
-      sel.appendChild(opt);
-    });
+function populateModelSelector(models) {
+  const saved = localStorage.getItem('cyberflash_model');
+  const sel = document.getElementById('modal-model-select');
+  sel.innerHTML = '';
+  models.forEach(id => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = id;
+    if (id === saved) opt.selected = true;
+    sel.appendChild(opt);
   });
-  // Sync modal selection → sidebar selection on change
-  document.getElementById('modal-model-select').onchange = function() {
-    document.getElementById('model-select').value = this.value;
-    localStorage.setItem('cyberflash_model', this.value);
-    closeModal();
-  };
+  // Persist selection immediately on change
+  sel.onchange = () => localStorage.setItem('cyberflash_model', sel.value);
 }
 
-// Load saved model on init
+// Restore saved model into the modal selector on init
 function loadSavedModel() {
   const saved = localStorage.getItem('cyberflash_model');
-  if (saved) {
-    const sel = document.getElementById('model-select');
-    const existing = [...sel.options].find(o => o.value === saved);
-    if (existing) { sel.value = saved; return; }
-    const opt = document.createElement('option');
-    opt.value = saved; opt.textContent = saved; opt.selected = true;
-    sel.appendChild(opt);
-  }
+  if (!saved) return;
+  const sel = document.getElementById('modal-model-select');
+  const existing = [...sel.options].find(o => o.value === saved);
+  if (existing) { sel.value = saved; return; }
+  const opt = document.createElement('option');
+  opt.value = saved; opt.textContent = saved; opt.selected = true;
+  sel.appendChild(opt);
 }
 
-// On init, if key exists, silently fetch and populate models
+// On init with existing key: silently fetch models and populate selector
 async function initModels() {
   if (!apiKey) return;
-  const loadEl = document.getElementById('model-loading');
-  loadEl.style.display = 'block';
+  document.getElementById('modal-models-loading').style.display = 'block';
   try {
     const models = await fetchModels(apiKey);
-    populateModelSelectors(models);
+    populateModelSelector(models);
     loadSavedModel();
-  } catch (_) { /* silent — model selector stays with default */ }
-  finally { loadEl.style.display = 'none'; }
+  } catch (_) { /* silent — selector stays with default */ }
+  finally { document.getElementById('modal-models-loading').style.display = 'none'; }
 }
 
 function toggleKeyVisibility(inputId, btn) {
@@ -1374,7 +1353,7 @@ async function generateReport() {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: document.getElementById('model-select').value,
+        model: document.getElementById('modal-model-select').value,
         messages: [
           {
             role: 'user',
