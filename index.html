@@ -659,6 +659,57 @@
       justify-content: flex-end;
     }
 
+    /* ── Metadata section ── */
+    #metadata .section-content ul {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #metadata .section-content li {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    #metadata .section-content li:nth-child(odd):not(:last-child),
+    #metadata .section-content li:nth-child(even):not(:last-child) {
+      border-bottom: 1px solid var(--border);
+    }
+
+    #metadata .section-content li:nth-last-child(-n+2) {
+      border-bottom: none;
+    }
+
+    #metadata .section-content li:nth-child(odd) {
+      background: var(--surface-2);
+      border-right: 1px solid var(--border);
+    }
+
+    #metadata .section-content li strong {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+    }
+
+    @media (max-width: 700px) {
+      #metadata .section-content ul { grid-template-columns: 1fr; }
+      #metadata .section-content li:nth-child(odd) { border-right: none; }
+      #metadata .section-content li:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
+      #metadata .section-content li:last-child { border-bottom: none; }
+    }
+
     @media print {
       header, .sidebar, .report-actions { display: none !important; }
       main { grid-template-columns: 1fr; padding: 0; }
@@ -1040,7 +1091,25 @@ Threat levels: CRITICAL / HIGH / ELEVATED / GUARDED / LOW
 
 After the table, write 2–3 sentences of analytical synthesis explaining the overarching pattern across sectors — what common factors are driving elevated risk, and what the convergence of threats means for defenders.
 
-Only include sectors for which there is substantive evidence. Do not populate rows with generic or speculative content.`;
+Only include sectors for which there is substantive evidence. Do not populate rows with generic or speculative content.
+
+---
+
+## Report Metadata
+
+Populate the following metadata fields based on the report content and parameters. If a field cannot be determined, mark it as [TBD].
+
+- **Classification:** [TLP level and description — e.g., TLP:AMBER — Restricted to recipient organisation and its security teams]
+- **Date:** [Today's report publication date]
+- **Period Covered:** [Six-month date range this report covers]
+- **Confidence:** [HIGH / MEDIUM / LOW — based on source quality and corroboration of events cited]
+- **Prepared by:** CyberFlash Intelligence Team
+- **Prepared for:** ${sector} sector executive leadership, ${geography}
+- **Scope:** ${geography} — ${sector}
+- **Product Type:** Strategic Cyber Threat Intelligence Situation Report (SITREP)
+- **Subject:** [Core subject — derive from the central threat or event described in this report]
+- **Intended Use:** Executive decision-making; cyber defense strategy; vulnerability management transformation
+- **Distribution:** [Distribution restrictions consistent with the TLP classification above]`;
 }
 
 const SECTION_CONFIG = [
@@ -1049,6 +1118,7 @@ const SECTION_CONFIG = [
   { id: 'key-events',     key: 'Key Cybersecurity Events',           number: '03', title: 'Key Cybersecurity Events' },
   { id: 'strategic',      key: 'Strategic Context',                  number: '04', title: 'Strategic Context' },
   { id: 'risk-outlook',   key: 'Critical Infrastructure Risk Outlook', number: '05', title: 'Critical Infrastructure Risk Outlook' },
+  { id: 'metadata',       key: 'Report Metadata',                      number: '06', title: 'Report Metadata' },
 ];
 
 function setState(state) {
@@ -1270,6 +1340,7 @@ function renderReport(content, geography, sector, focus) {
 
     const div = document.createElement('div');
     div.className = 'section';
+    div.id = cfg.id;
     div.innerHTML = `
       <div class="section-header">
         <div class="section-number">${cfg.number}</div>

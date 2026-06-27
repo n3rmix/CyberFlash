@@ -17,6 +17,7 @@ Select a geography, sector, and threat focus. CyberFlash queries the Osiris AI A
 | **Key Cybersecurity Events** | Named incidents with date, actors, summary, concrete impact list, and attribution confidence rating |
 | **Strategic Context** | Nation-state actor breakdowns with escalation risk ratings, plus geopolitical and regulatory framing |
 | **Critical Infrastructure Risk Outlook** | Sector-by-sector threat level table (CRITICAL → LOW) with analytical synthesis |
+| **Report Metadata** | TLP classification, period covered, confidence rating, scope, distribution, and intended use |
 
 Reports are based on the **last 6 months** of threat intelligence. Sections are omitted rather than padded when source data is insufficient.
 
