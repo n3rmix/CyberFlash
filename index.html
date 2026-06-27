@@ -1559,22 +1559,22 @@ function buildKovaSlides(raw, geography, sector, focus, period) {
   const slides = [];
 
   // ── 1. Title slide — H1 triggers `title` layout automatically ──
+  // Paragraphs below H1 render as subtitles per Kova spec
   slides.push(
-`# ${sector}
-${geography} · Cybersecurity SITREP
+`# ${sector} — ${geography}
+Cybersecurity SITREP
 
-**Date:** ${dateStr}
-**Period Covered:** ${period.label}
-**Focus:** ${focus.charAt(0).toUpperCase() + focus.slice(1)}`
+${dateStr} · ${period.label}`
   );
 
-  // ── 2. Table of Contents — `title-content` layout ──
-  const tocLines = SECTION_CONFIG.map(s => `- **${s.number}** — ${s.title}`).join('\n');
+  // ── 2. Table of Contents — `title-content` layout (## + list) ──
+  const tocLines = SECTION_CONFIG.map(s => `- **${s.number}** ${s.title}`).join('\n');
   slides.push(`## Contents\n\n${tocLines}`);
 
   // ── 3. Parse each ## section from the raw AI response ──
+  // Use gm flags so ^ matches line starts across the full string
   const sectionMatches = [...raw.matchAll(/^## (.+)$/gm)];
-  const rawParts = raw.split(/^## .+$/m).slice(1);
+  const rawParts = raw.split(/^## .+$/gm).slice(1);
 
   sectionMatches.forEach((match, i) => {
     const sectionTitle = match[1].trim();
@@ -1582,13 +1582,11 @@ ${geography} · Cybersecurity SITREP
     const cfg = SECTION_CONFIG.find(s => s.title.toLowerCase() === sectionTitle.toLowerCase()) || {};
     const label = cfg.number ? `${cfg.number} — ${sectionTitle}` : sectionTitle;
 
-    // Section break slide: ## heading only → Kova auto-selects `section` layout
+    // Section break slide: ## with no body → Kova auto-selects `section` layout
     slides.push(`## ${label}`);
 
-    // No body content — nothing more to add
     if (!sectionBody) return;
 
-    // Route to specialised builders based on section identity
     if (cfg.id === 'exec-summary') {
       buildExecSummarySlides(slides, label, sectionBody);
     } else if (cfg.id === 'exec-judgments') {
@@ -1603,34 +1601,28 @@ ${geography} · Cybersecurity SITREP
   return slides.join('\n\n---\n\n');
 }
 
-// Executive Summary: 6 dense paragraphs → split into two columns after ¶3
+// Executive Summary: group into 2-paragraph slides; use ||| on dense slides
+// ||| auto-triggers two-column layout (Kova rule 3) — no explicit override needed
 function buildExecSummarySlides(slides, label, body) {
   const paras = body.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
   if (paras.length === 0) return;
 
-  // Slides of 2 paragraphs each, two-column layout if dense
-  const chunks = [];
   for (let i = 0; i < paras.length; i += 2) {
-    chunks.push(paras.slice(i, i + 2).join('\n\n'));
-  }
-
-  chunks.forEach((chunk, idx) => {
-    const isLong = chunk.length > 600;
-    const lines = chunk.split('\n\n');
+    const chunk = paras.slice(i, i + 2);
     let content;
-    if (isLong && lines.length >= 2) {
-      const mid = Math.ceil(lines.length / 2);
-      content = `<!-- layout:two-column -->\n${lines.slice(0, mid).join('\n\n')}\n\n|||\n\n${lines.slice(mid).join('\n\n')}`;
+    if (chunk.length === 2 && (chunk[0].length + chunk[1].length) > 600) {
+      // Dense: split with ||| — Kova detects two-column automatically
+      content = `${chunk[0]}\n\n|||\n\n${chunk[1]}`;
     } else {
-      content = chunk;
+      content = chunk.join('\n\n');
     }
     slides.push(`## ${label}\n\n${safeBody(content)}`);
-  });
+  }
 }
 
-// Executive Judgments: Key Findings, Anticipated Impact (split two-column), Priority Actions
+// Executive Judgments: Key Findings, Anticipated Impact (two-column via |||), Priority Actions
 function buildExecJudgmentsSlides(slides, label, body) {
-  const subParts = body.split(/^### /m);
+  const subParts = body.split(/^### ?/gm);
   const intro = subParts[0].trim();
   if (intro) slides.push(`## ${label}\n\n${safeBody(intro)}`);
 
@@ -1639,10 +1631,11 @@ function buildExecJudgmentsSlides(slides, label, body) {
     const subTitle = lines[0].trim();
     const subBody = lines.slice(1).join('\n').trim();
 
-    // Anticipated Impact: split Medium-Term and Long-Term into two columns
+    // Anticipated Impact: Medium-Term ||| Long-Term two-column
+    // ||| auto-triggers two-column (rule 3) — no layout comment needed
     if (/anticipated impact/i.test(subTitle)) {
-      const medMatch = subBody.match(/^#### Medium[^\n]*\n([\s\S]*?)(?=^#### |$)/m);
-      const longMatch = subBody.match(/^#### Long[^\n]*\n([\s\S]*?)(?=^#### |$)/m);
+      const medMatch = subBody.match(/^####? Medium[^\n]*\n([\s\S]*?)(?=^####? |$)/m);
+      const longMatch = subBody.match(/^####? Long[^\n]*\n([\s\S]*?)(?=^####? |$)/m);
       if (medMatch && longMatch) {
         slides.push(
 `## ${label}
@@ -1661,37 +1654,33 @@ ${longMatch[1].trim()}`
       }
     }
 
-    // All other sub-sections: standard slide
     slides.push(`## ${label}\n\n### ${subTitle}\n\n${safeBody(subBody)}`);
   });
 }
 
-// Report Metadata: split the bullet list into two equal columns
+// Report Metadata: split list into two columns via |||
+// ||| auto-triggers two-column (rule 3) — no explicit layout comment needed
 function buildMetadataSlide(slides, label, body) {
-  // Extract bullet list items
   const items = body.split('\n').filter(l => /^- \*\*/.test(l.trim()));
   if (items.length === 0) {
     slides.push(`## ${label}\n\n${safeBody(body)}`);
     return;
   }
   const mid = Math.ceil(items.length / 2);
-  const left = items.slice(0, mid).join('\n');
-  const right = items.slice(mid).join('\n');
   slides.push(
 `## ${label}
 
-<!-- layout:two-column -->
-${left}
+${items.slice(0, mid).join('\n')}
 
 |||
 
-${right}`
+${items.slice(mid).join('\n')}`
   );
 }
 
-// Generic sections: section break already added; split on ### and ####
+// Generic sections: split on ### subsections and #### deep entries
 function buildGenericSectionSlides(slides, label, body) {
-  const subParts = body.split(/^### /m);
+  const subParts = body.split(/^### ?/gm);
   const intro = subParts[0].trim();
   if (intro) slides.push(`## ${label}\n\n${safeBody(intro)}`);
 
@@ -1700,8 +1689,7 @@ function buildGenericSectionSlides(slides, label, body) {
     const subTitle = lines[0].trim();
     const subBody = lines.slice(1).join('\n').trim();
 
-    // Split further on #### entries (e.g. nation-state actors)
-    const deepParts = subBody.split(/^#### /m);
+    const deepParts = subBody.split(/^#### ?/gm);
     if (deepParts.length === 1) {
       slides.push(`## ${label}\n\n### ${subTitle}\n\n${safeBody(subBody)}`);
     } else {
@@ -1717,7 +1705,7 @@ function buildGenericSectionSlides(slides, label, body) {
   });
 }
 
-// Replace --- dividers inside slide content with <hr> (Kova slide separator rule)
+// Replace --- at line start with <hr> — Kova uses --- only as a slide separator
 function safeBody(text) {
   return text.replace(/^---$/gm, '<hr>');
 }
