@@ -944,6 +944,7 @@
 
       <div class="report-actions">
         <button class="btn-ghost print-btn" onclick="window.print()">🖨 Print / Export PDF</button>
+        <button class="btn-ghost" onclick="exportKovaMarkdown()">⬇ Export Markdown</button>
         <button class="btn-ghost" onclick="resetReport()">↩ New Report</button>
       </div>
     </div>
@@ -958,6 +959,8 @@ const API_BASE = '/proxy/v1';
 let apiKey = localStorage.getItem(STORAGE_KEY) || '';
 let isGenerating = false;
 let currentController = null;
+let lastRawContent = '';
+let lastReportParams = {};
 
 // ── Init ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -1299,6 +1302,8 @@ async function generateReport() {
 
     if (!content) throw new Error('Empty response from API');
 
+    lastRawContent = content;
+    lastReportParams = { geography, sector, focus, period };
     renderReport(content, geography, sector, focus, period);
     setState('report');
 
@@ -1444,6 +1449,105 @@ function resetReport() {
   setState('empty');
   document.getElementById('report-info').style.display = 'none';
   document.getElementById('report-sections').innerHTML = '';
+}
+
+// ── Kova Markdown Export ───────────────────────────────────────────────────
+function buildKovaSlides(raw, geography, sector, focus, period) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const slug = `${geography} — ${sector}`.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  const slides = [];
+
+  // ── Title slide ──
+  slides.push(
+`# ${sector} — ${geography}
+Cybersecurity SITREP
+
+**Date:** ${dateStr}
+**Period Covered:** ${period.label}
+**Focus:** ${focus.charAt(0).toUpperCase() + focus.slice(1)}`
+  );
+
+  // ── Table of Contents slide ──
+  const tocLines = SECTION_CONFIG.map(s => `- ${s.number}  ${s.title}`).join('\n');
+  slides.push(`## Contents\n\n${tocLines}`);
+
+  // ── Parse each top-level ## section ──
+  const sectionMatches = [...raw.matchAll(/^## (.+)$/gm)];
+  const rawParts = raw.split(/^## .+$/m).slice(1);
+
+  sectionMatches.forEach((match, i) => {
+    const sectionTitle = match[1].trim();
+    const sectionBody = (rawParts[i] || '').trim();
+    const cfg = SECTION_CONFIG.find(s => s.title.toLowerCase() === sectionTitle.toLowerCase()) || {};
+    const sectionLabel = cfg.number ? `${cfg.number} — ${sectionTitle}` : sectionTitle;
+
+    // Split on ### sub-headings
+    const subParts = sectionBody.split(/^### /m);
+    const intro = subParts[0].trim();
+
+    // If there are no ### sub-sections, render as a single slide
+    if (subParts.length === 1) {
+      slides.push(kovaSlide(sectionLabel, intro));
+      return;
+    }
+
+    // Intro content before first ### (if any) gets its own slide
+    if (intro) {
+      slides.push(kovaSlide(sectionLabel, intro));
+    }
+
+    // Each ### sub-section becomes its own slide
+    subParts.slice(1).forEach(sub => {
+      const lines = sub.split('\n');
+      const subTitle = lines[0].trim();
+      const subBody = lines.slice(1).join('\n').trim();
+
+      // Split further on #### (e.g. nation-state actor entries)
+      const subSubParts = subBody.split(/^#### /m);
+      if (subSubParts.length === 1) {
+        slides.push(kovaSlide(`${sectionLabel}`, subBody, subTitle));
+      } else {
+        const subIntro = subSubParts[0].trim();
+        if (subIntro) {
+          slides.push(kovaSlide(sectionLabel, subIntro, subTitle));
+        }
+        subSubParts.slice(1).forEach(ss => {
+          const ssLines = ss.split('\n');
+          const ssTitle = ssLines[0].trim();
+          const ssBody = ssLines.slice(1).join('\n').trim();
+          slides.push(kovaSlide(`${sectionLabel} — ${subTitle}`, ssBody, ssTitle));
+        });
+      }
+    });
+  });
+
+  return slides.join('\n\n---\n\n');
+}
+
+function kovaSlide(heading, body, subHeading) {
+  // Replace any --- dividers inside content with <hr> (Kova rule)
+  const safeBody = body.replace(/^---$/gm, '<hr>');
+  const h3 = subHeading ? `\n\n### ${subHeading}` : '';
+  return `## ${heading}${h3}\n\n${safeBody}`;
+}
+
+function exportKovaMarkdown() {
+  if (!lastRawContent) return;
+  const { geography, sector, focus, period } = lastReportParams;
+  const kova = buildKovaSlides(lastRawContent, geography, sector, focus, period);
+
+  const dateSlug = new Date().toISOString().slice(0, 10);
+  const nameSlug = `${geography}-${sector}`.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  const filename = `cyberflash-${nameSlug}-${dateSlug}.md`;
+
+  const blob = new Blob([kova], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
