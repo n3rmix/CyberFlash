@@ -910,9 +910,6 @@ OUTPUT FORMAT — Use this exact structure with these exact markdown headers:
 ## Impact Assessment
 [Quantified or estimated financial and operational impact. Reference real incidents or breach costs from this geography/sector where possible. Include regulatory exposure (GDPR, HIPAA, NIS2, etc. as applicable).]
 
-## Detection
-[Specific indicators or behavioral patterns this organization should look for. Only include if you have specific, actionable detection signals — not generic "monitor your logs" advice. If insufficient data, say so.]
-
 ## Mitigation & Response
 [ONLY specific, named, actionable items. Examples of acceptable recommendations: "Disable NTLM authentication in Active Directory via Group Policy Object GPO > Computer Configuration > Windows Settings > Security Settings > Local Policies > Security Options > Network security: Restrict NTLM". Examples of UNACCEPTABLE: "improve your security posture", "train your employees", "update your software". If you cannot provide specific actionable guidance, state: "No high-confidence specific recommendations available for this threat profile — engage a specialized incident response firm with ${sector} sector expertise."]
 
@@ -924,8 +921,7 @@ const SECTION_CONFIG = [
   { id: 'threat-overview', key: 'Threat Overview', number: '02', title: 'Threat Overview' },
   { id: 'technical', key: 'Technical Details', number: '03', title: 'Technical Details' },
   { id: 'impact', key: 'Impact Assessment', number: '04', title: 'Impact Assessment' },
-  { id: 'detection', key: 'Detection', number: '05', title: 'Detection' },
-  { id: 'mitigation', key: 'Mitigation & Response', number: '06', title: 'Mitigation & Response' },
+  { id: 'mitigation', key: 'Mitigation & Response', number: '05', title: 'Mitigation & Response' },
 ];
 
 function setState(state) {

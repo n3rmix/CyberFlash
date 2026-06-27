@@ -16,7 +16,6 @@ Select a geography, sector, and threat focus. CyberFlash queries the Osiris AI A
 | **Threat Overview** | Named threat actors, active campaigns, and attack vectors |
 | **Technical Details** | CISO-level specifics — CVEs, TTPs, and tools with business relevance |
 | **Impact Assessment** | Financial exposure, operational risk, and regulatory consequences |
-| **Detection** | Specific behavioural signals and indicators to look for |
 | **Mitigation & Response** | Named, actionable steps only — never generic advice |
 
 Reports are based on the **last 6 months** of threat intelligence and are generated fresh each time.
