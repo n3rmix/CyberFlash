@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberFlash — Cybersecurity Flash Reports</title>
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --surface: #111827;
+      --surface-2: #1a2235;
+      --border: #1e2d45;
+      --accent: #3b82f6;
+      --accent-dim: #1d4ed8;
+      --accent-glow: rgba(59, 130, 246, 0.15);
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --green: #10b981;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-muted: #4a5568;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      background: rgba(10, 14, 23, 0.95);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo span.sub {
+      color: var(--text-dim);
+      font-weight: 400;
+      font-size: 0.85rem;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* ── API Key Banner ── */
+    #api-key-banner {
+      background: linear-gradient(90deg, rgba(245,158,11,0.1), rgba(245,158,11,0.05));
+      border-bottom: 1px solid rgba(245,158,11,0.2);
+      padding: 0.6rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--amber);
+    }
+
+    #api-key-banner.hidden { display: none; }
+
+    .api-key-form {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    /* ── Main Layout ── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: sticky;
+      top: 80px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card + .card { margin-top: 1rem; }
+
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Form Controls ── */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.03em;
+    }
+
+    select, input[type="text"], input[type="password"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 0.6rem 0.9rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.9rem center;
+      padding-right: 2.2rem;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    .generate-btn {
+      width: 100%;
+      padding: 0.75rem 1.5rem;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      letter-spacing: 0.02em;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .generate-btn:hover:not(:disabled) {
+      background: #2563eb;
+      box-shadow: 0 0 20px rgba(59,130,246,0.3);
+    }
+
+    .generate-btn:active:not(:disabled) { transform: scale(0.98); }
+
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-sm {
+      padding: 0.4rem 0.9rem;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .btn-sm:hover { background: #2563eb; }
+
+    .btn-ghost {
+      padding: 0.4rem 0.75rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Report Area ── */
+    .report-area {
+      min-height: 600px;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 500px;
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--text-muted);
+      gap: 1rem;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      opacity: 0.4;
+    }
+
+    .empty-state p { font-size: 0.9rem; max-width: 300px; }
+
+    /* ── Report ── */
+    #report { display: none; }
+    #report.visible { display: block; }
+
+    .report-header {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .report-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #8b5cf6, #ec4899);
+    }
+
+    .report-meta {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .report-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.25);
+      border-radius: 20px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .report-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .report-subtitle {
+      color: var(--text-dim);
+      font-size: 0.875rem;
+    }
+
+    .report-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    .tag.accent { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.2); color: var(--accent); }
+
+    /* ── Report Sections ── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-number {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .section-content {
+      color: var(--text);
+      font-size: 0.925rem;
+      line-height: 1.75;
+    }
+
+    .section-content p { margin-bottom: 0.85rem; }
+    .section-content p:last-child { margin-bottom: 0; }
+
+    .section-content ul, .section-content ol {
+      padding-left: 1.5rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .section-content li { margin-bottom: 0.4rem; }
+
+    .section-content strong { color: #f1f5f9; font-weight: 700; }
+
+    .section-content h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 1rem 0 0.5rem;
+    }
+
+    /* Risk level badge */
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border-radius: 4px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .risk-critical { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+    .risk-high { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #fbbf24; }
+    .risk-medium { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); color: #60a5fa; }
+
+    /* ── Loading State ── */
+    .loading-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 500px;
+      text-align: center;
+      gap: 1.5rem;
+    }
+
+    .loading-state.visible { display: flex; }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      color: var(--text-dim);
+      font-size: 0.875rem;
+    }
+
+    .loading-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      text-align: left;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .loading-step.active { color: var(--accent); }
+    .loading-step.done { color: var(--green); }
+
+    /* ── Error ── */
+    .error-state {
+      display: none;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      color: #f87171;
+      font-size: 0.875rem;
+    }
+
+    .error-state.visible { display: block; }
+    .error-title { font-weight: 700; margin-bottom: 0.5rem; }
+
+    /* ── API Key Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 480px;
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-desc {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .input-with-toggle {
+      position: relative;
+    }
+
+    .input-with-toggle input {
+      padding-right: 2.5rem;
+    }
+
+    .toggle-visibility {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0;
+    }
+
+    .toggle-visibility:hover { color: var(--text-dim); }
+
+    /* ── Print ── */
+    .print-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ── Footer info ── */
+    .info-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .key-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .key-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .key-dot.missing { background: var(--red); }
+
+    /* ── Streaming cursor ── */
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--accent);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── Report Actions ── */
+    .report-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      justify-content: flex-end;
+    }
+
+    @media print {
+      header, .sidebar, .report-actions { display: none !important; }
+      main { grid-template-columns: 1fr; padding: 0; }
+      body { background: #fff; color: #000; }
+      .section, .report-header, .card { border-color: #ddd; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="api-modal">
+  <div class="modal">
+    <div class="modal-title">Enter your Osiris API Key</div>
+    <div class="modal-desc">
+      Your API key is stored only in your browser's local storage and never sent to any server other than <strong>osiris-code.com</strong>.
+    </div>
+    <div class="form-group">
+      <label for="modal-api-key">API Key</label>
+      <div class="input-with-toggle">
+        <input type="password" id="modal-api-key" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+        <button class="toggle-visibility" onclick="toggleKeyVisibility('modal-api-key', this)" title="Toggle visibility">👁</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-sm" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      CyberFlash
+      <span class="sub" style="display:block;margin-top:-2px;">Cybersecurity Flash Reports</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="key-indicator" id="key-status">
+      <div class="key-dot missing" id="key-dot"></div>
+      <span id="key-label">No API Key</span>
+    </div>
+    <button class="btn-ghost" onclick="openModal()">⚙ API Key</button>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-title">Report Parameters</div>
+
+      <div class="form-group">
+        <label for="geography">Geography</label>
+        <select id="geography">
+          <optgroup label="Global">
+            <option value="Global">Global</option>
+          </optgroup>
+          <optgroup label="North America">
+            <option value="United States">United States</option>
+            <option value="Canada">Canada</option>
+            <option value="Mexico">Mexico</option>
+          </optgroup>
+          <optgroup label="Europe">
+            <option value="European Union">European Union</option>
+            <option value="United Kingdom">United Kingdom</option>
+            <option value="Germany">Germany</option>
+            <option value="France">France</option>
+            <option value="Netherlands">Netherlands</option>
+            <option value="Nordics (Sweden, Norway, Denmark, Finland)">Nordics</option>
+            <option value="Eastern Europe">Eastern Europe</option>
+          </optgroup>
+          <optgroup label="Asia Pacific">
+            <option value="APAC Region">APAC Region</option>
+            <option value="Japan">Japan</option>
+            <option value="Australia & New Zealand">Australia & New Zealand</option>
+            <option value="Singapore">Singapore</option>
+            <option value="India">India</option>
+            <option value="China">China</option>
+            <option value="South Korea">South Korea</option>
+          </optgroup>
+          <optgroup label="Middle East & Africa">
+            <option value="Middle East (GCC)">Middle East (GCC)</option>
+            <option value="Israel">Israel</option>
+            <option value="South Africa">South Africa</option>
+          </optgroup>
+          <optgroup label="Latin America">
+            <option value="Brazil">Brazil</option>
+            <option value="Latin America">Latin America (Regional)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="sector">Sector</label>
+        <select id="sector">
+          <option value="All Sectors">All Sectors</option>
+          <optgroup label="Critical Infrastructure">
+            <option value="Financial Services & Banking">Financial Services & Banking</option>
+            <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
+            <option value="Energy & Utilities">Energy & Utilities</option>
+            <option value="Telecommunications">Telecommunications</option>
+            <option value="Transportation & Logistics">Transportation & Logistics</option>
+            <option value="Government & Defense">Government & Defense</option>
+            <option value="Water & Wastewater">Water & Wastewater</option>
+          </optgroup>
+          <optgroup label="Technology">
+            <option value="Technology & Software">Technology & Software</option>
+            <option value="Cloud & SaaS Providers">Cloud & SaaS Providers</option>
+            <option value="Semiconductor & Hardware">Semiconductor & Hardware</option>
+          </optgroup>
+          <optgroup label="Enterprise">
+            <option value="Retail & E-Commerce">Retail & E-Commerce</option>
+            <option value="Manufacturing & Industrial">Manufacturing & Industrial</option>
+            <option value="Media & Entertainment">Media & Entertainment</option>
+            <option value="Education">Education</option>
+            <option value="Legal & Professional Services">Legal & Professional Services</option>
+            <option value="Insurance">Insurance</option>
+            <option value="Real Estate">Real Estate</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="risk-level">Focus Level</label>
+        <select id="risk-level">
+          <option value="all threats">All Threats</option>
+          <option value="critical and high severity threats only">Critical & High Only</option>
+          <option value="ransomware and data breach threats">Ransomware & Data Breaches</option>
+          <option value="nation-state and APT threats">Nation-State & APT</option>
+          <option value="supply chain threats">Supply Chain Attacks</option>
+        </select>
+      </div>
+
+      <button class="generate-btn" id="generate-btn" onclick="generateReport()">
+        <span id="btn-icon">⚡</span>
+        <span id="btn-text">Generate Flash Report</span>
+      </button>
+
+      <div class="info-row">
+        <span style="font-size:0.72rem;color:var(--text-muted)">Powered by Osiris AI · Last 6 months of threat intelligence</span>
+      </div>
+    </div>
+
+    <div class="card" id="report-info" style="display:none">
+      <div class="card-title">Generated Report</div>
+      <div style="font-size:0.8rem;color:var(--text-dim);line-height:1.6" id="report-meta-summary"></div>
+    </div>
+  </div>
+
+  <!-- Report Area -->
+  <div class="report-area">
+    <!-- Empty State -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-state-icon">🛡️</div>
+      <strong style="color:var(--text-dim);font-size:0.95rem">No report generated yet</strong>
+      <p>Select a geography and sector, then click Generate to produce a cybersecurity flash report tailored for senior stakeholders.</p>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loading-state">
+      <div class="spinner"></div>
+      <div>
+        <div class="loading-text" id="loading-text">Analyzing threat intelligence...</div>
+        <div class="loading-steps" style="margin-top:1rem">
+          <div class="loading-step" id="step-1">⬜ Gathering regional threat data</div>
+          <div class="loading-step" id="step-2">⬜ Correlating sector-specific incidents</div>
+          <div class="loading-step" id="step-3">⬜ Assessing business impact</div>
+          <div class="loading-step" id="step-4">⬜ Formulating actionable recommendations</div>
+          <div class="loading-step" id="step-5">⬜ Finalizing executive report</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-state" id="error-state">
+      <div class="error-title">⚠ Report generation failed</div>
+      <div id="error-message"></div>
+    </div>
+
+    <!-- Report -->
+    <div id="report">
+      <div class="report-header">
+        <div class="report-meta">
+          <div class="report-badge">⚡ Flash Report</div>
+          <div class="report-tags" id="report-tags"></div>
+        </div>
+        <div class="report-title" id="report-title"></div>
+        <div class="report-subtitle" id="report-subtitle"></div>
+      </div>
+
+      <div id="report-sections"></div>
+
+      <div class="report-actions">
+        <button class="btn-ghost print-btn" onclick="window.print()">🖨 Print / Export PDF</button>
+        <button class="btn-ghost" onclick="resetReport()">↩ New Report</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const STORAGE_KEY = 'cyberflash_api_key';
+const API_BASE = 'https://osiris-code.com/app/v1';
+
+// ── State ──────────────────────────────────────────────────────────────────
+let apiKey = localStorage.getItem(STORAGE_KEY) || '';
+let isGenerating = false;
+let currentController = null;
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateKeyStatus();
+  if (!apiKey) {
+    setTimeout(openModal, 400);
+  }
+});
+
+// ── API Key Management ─────────────────────────────────────────────────────
+function updateKeyStatus() {
+  const dot = document.getElementById('key-dot');
+  const label = document.getElementById('key-label');
+  if (apiKey) {
+    dot.classList.remove('missing');
+    label.textContent = 'API Key Set';
+  } else {
+    dot.classList.add('missing');
+    label.textContent = 'No API Key';
+  }
+}
+
+function openModal() {
+  document.getElementById('modal-api-key').value = apiKey ? '•'.repeat(20) : '';
+  document.getElementById('api-modal').classList.add('visible');
+  setTimeout(() => document.getElementById('modal-api-key').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('api-modal').classList.remove('visible');
+}
+
+function saveApiKey() {
+  const input = document.getElementById('modal-api-key').value.trim();
+  if (!input || input.startsWith('•')) {
+    closeModal();
+    return;
+  }
+  apiKey = input;
+  localStorage.setItem(STORAGE_KEY, apiKey);
+  updateKeyStatus();
+  closeModal();
+}
+
+function toggleKeyVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('api-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Enter key on API key input
+document.getElementById('modal-api-key').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') saveApiKey();
+});
+
+// ── Report Generation ──────────────────────────────────────────────────────
+function buildPrompt(geography, sector, focus) {
+  return `You are a senior cybersecurity intelligence analyst producing a FLASH REPORT for C-suite executives and senior business stakeholders.
+
+REPORT PARAMETERS:
+- Geography: ${geography}
+- Sector: ${sector}
+- Focus: ${focus}
+- Time Period: Last 6 months (relative to your knowledge cutoff)
+
+AUDIENCE: CEOs, CFOs, Board Members, and Senior Business Leaders — NOT technical security teams.
+
+CRITICAL RULES:
+1. Every recommendation MUST be specific, named, and immediately actionable. No generic advice.
+2. If you cannot provide a genuinely useful, specific recommendation for any sub-point, explicitly state: "Insufficient sector-specific data to provide targeted guidance at this time." DO NOT pad with vague advice.
+3. Never say: "update your systems", "patch regularly", "improve security awareness", "implement best practices", "enhance monitoring", or any similar generic statement.
+4. Focus on BUSINESS IMPACT: financial exposure, operational disruption, regulatory consequences, reputational damage.
+5. Name specific threat actors, malware families, CVEs, or incidents where relevant and known.
+6. Use concrete numbers and percentages where available from known incidents.
+
+OUTPUT FORMAT — Use this exact structure with these exact markdown headers:
+
+## Executive Summary
+[3-5 sentences. The single most important thing this leadership team must understand right now. Lead with business risk, not technical details. Include a severity/urgency assessment.]
+
+## Threat Overview
+[Named threat actors, campaigns, or malware families active in this geography/sector over the last 6 months. Include attack vectors and initial access methods. Keep technical jargon minimal — explain in business terms.]
+
+## Technical Details
+[Key vulnerabilities, attack chains, or TTPs that are operationally relevant. Only include what a CISO would need to brief the board about. Be specific — name CVEs, tools, or techniques only if they have direct business relevance.]
+
+## Impact Assessment
+[Quantified or estimated financial and operational impact. Reference real incidents or breach costs from this geography/sector where possible. Include regulatory exposure (GDPR, HIPAA, NIS2, etc. as applicable).]
+
+## Detection
+[Specific indicators or behavioral patterns this organization should look for. Only include if you have specific, actionable detection signals — not generic "monitor your logs" advice. If insufficient data, say so.]
+
+## Mitigation & Response
+[ONLY specific, named, actionable items. Examples of acceptable recommendations: "Disable NTLM authentication in Active Directory via Group Policy Object GPO > Computer Configuration > Windows Settings > Security Settings > Local Policies > Security Options > Network security: Restrict NTLM". Examples of UNACCEPTABLE: "improve your security posture", "train your employees", "update your software". If you cannot provide specific actionable guidance, state: "No high-confidence specific recommendations available for this threat profile — engage a specialized incident response firm with ${sector} sector expertise."]
+
+Be direct. Be specific. Prioritize ruthlessly. This report will be read in under 10 minutes by people making resource allocation decisions.`;
+}
+
+const SECTION_CONFIG = [
+  { id: 'exec-summary', key: 'Executive Summary', number: '01', title: 'Executive Summary' },
+  { id: 'threat-overview', key: 'Threat Overview', number: '02', title: 'Threat Overview' },
+  { id: 'technical', key: 'Technical Details', number: '03', title: 'Technical Details' },
+  { id: 'impact', key: 'Impact Assessment', number: '04', title: 'Impact Assessment' },
+  { id: 'detection', key: 'Detection', number: '05', title: 'Detection' },
+  { id: 'mitigation', key: 'Mitigation & Response', number: '06', title: 'Mitigation & Response' },
+];
+
+function setState(state) {
+  document.getElementById('empty-state').style.display = state === 'empty' ? 'flex' : 'none';
+  document.getElementById('loading-state').classList.toggle('visible', state === 'loading');
+  document.getElementById('error-state').classList.toggle('visible', state === 'error');
+  document.getElementById('report').classList.toggle('visible', state === 'report');
+}
+
+function animateLoadingSteps() {
+  const steps = [1, 2, 3, 4, 5];
+  const delays = [0, 2500, 5000, 8000, 11000];
+  steps.forEach((n, i) => {
+    setTimeout(() => {
+      steps.forEach(s => {
+        const el = document.getElementById(`step-${s}`);
+        if (s < n) {
+          el.textContent = el.textContent.replace('⬜', '✅').replace('🔄', '✅');
+          el.className = 'loading-step done';
+        } else if (s === n) {
+          el.textContent = el.textContent.replace('⬜', '🔄').replace('✅', '🔄');
+          el.className = 'loading-step active';
+        }
+      });
+    }, delays[i]);
+  });
+}
+
+function resetLoadingSteps() {
+  [1,2,3,4,5].forEach(n => {
+    const el = document.getElementById(`step-${n}`);
+    el.className = 'loading-step';
+    el.textContent = el.textContent.replace('✅', '⬜').replace('🔄', '⬜');
+  });
+}
+
+async function generateReport() {
+  if (isGenerating) {
+    currentController?.abort();
+    return;
+  }
+
+  if (!apiKey) {
+    openModal();
+    return;
+  }
+
+  const geography = document.getElementById('geography').value;
+  const sector = document.getElementById('sector').value;
+  const focus = document.getElementById('risk-level').value;
+
+  isGenerating = true;
+  currentController = new AbortController();
+
+  const btn = document.getElementById('generate-btn');
+  btn.disabled = false;
+  document.getElementById('btn-text').textContent = 'Cancel';
+  document.getElementById('btn-icon').textContent = '✕';
+
+  setState('loading');
+  resetLoadingSteps();
+  animateLoadingSteps();
+
+  try {
+    const response = await fetch(`${API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: buildPrompt(geography, sector, focus)
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 3000,
+        stream: false,
+      }),
+      signal: currentController.signal,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      let errMsg = `API error ${response.status}`;
+      try {
+        const errJson = JSON.parse(errText);
+        errMsg = errJson?.error?.message || errMsg;
+      } catch {}
+      throw new Error(errMsg);
+    }
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+
+    if (!content) throw new Error('Empty response from API');
+
+    renderReport(content, geography, sector, focus);
+    setState('report');
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      setState('empty');
+    } else {
+      document.getElementById('error-message').textContent = err.message;
+      setState('error');
+    }
+  } finally {
+    isGenerating = false;
+    currentController = null;
+    document.getElementById('btn-text').textContent = 'Generate Flash Report';
+    document.getElementById('btn-icon').textContent = '⚡';
+    btn.disabled = false;
+  }
+}
+
+function parseMarkdownSections(content) {
+  const sections = {};
+  SECTION_CONFIG.forEach(cfg => {
+    const regex = new RegExp(`##\\s*${cfg.key}\\s*\\n([\\s\\S]*?)(?=\\n##\\s|$)`, 'i');
+    const match = content.match(regex);
+    sections[cfg.key] = match ? match[1].trim() : '';
+  });
+  return sections;
+}
+
+function markdownToHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Bold
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Headers h4
+    .replace(/^####\s+(.+)$/gm, '<h4>$1</h4>')
+    .replace(/^###\s+(.+)$/gm, '<h4>$1</h4>')
+    // Bullet lists
+    .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    // Paragraphs
+    .split(/\n{2,}/).map(block => {
+      if (block.startsWith('<ul>') || block.startsWith('<h4>')) return block;
+      if (!block.trim()) return '';
+      return `<p>${block.replace(/\n/g, ' ')}</p>`;
+    }).join('\n');
+}
+
+function renderReport(content, geography, sector, focus) {
+  const sections = parseMarkdownSections(content);
+
+  // Header
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('report-title').textContent =
+    `${sector} Sector — ${geography}`;
+  document.getElementById('report-subtitle').textContent =
+    `Cybersecurity Flash Report · ${dateStr} · Based on threat intelligence from the last 6 months`;
+
+  // Tags
+  const tagsEl = document.getElementById('report-tags');
+  tagsEl.innerHTML = [
+    `<span class="tag accent">${geography}</span>`,
+    `<span class="tag">${sector}</span>`,
+    `<span class="tag">${focus.charAt(0).toUpperCase() + focus.slice(1)}</span>`,
+  ].join('');
+
+  // Sections
+  const sectionsEl = document.getElementById('report-sections');
+  sectionsEl.innerHTML = '';
+  SECTION_CONFIG.forEach(cfg => {
+    const rawContent = sections[cfg.key];
+    if (!rawContent) return;
+
+    const div = document.createElement('div');
+    div.className = 'section';
+    div.innerHTML = `
+      <div class="section-header">
+        <div class="section-number">${cfg.number}</div>
+        <div class="section-title">${cfg.title}</div>
+      </div>
+      <div class="section-content">${markdownToHtml(rawContent)}</div>
+    `;
+    sectionsEl.appendChild(div);
+  });
+
+  // Sidebar meta
+  document.getElementById('report-info').style.display = 'block';
+  document.getElementById('report-meta-summary').innerHTML = `
+    <strong style="color:var(--text)">${geography}</strong><br>
+    ${sector}<br>
+    <span style="color:var(--text-muted);font-size:0.75rem">${dateStr}</span>
+  `;
+}
+
+function resetReport() {
+  setState('empty');
+  document.getElementById('report-info').style.display = 'none';
+  document.getElementById('report-sections').innerHTML = '';
+}
+</script>
+</body>
+</html>
