@@ -693,7 +693,7 @@
       border-right: 1px solid var(--border);
     }
 
-    #metadata .section-content li strong {
+    #metadata .section-content li strong:first-child {
       display: block;
       font-size: 0.68rem;
       font-weight: 700;
@@ -701,6 +701,15 @@
       text-transform: uppercase;
       color: var(--text-muted);
       margin-bottom: 0.2rem;
+    }
+
+    #metadata .section-content li strong:not(:first-child) {
+      display: inline;
+      font-size: inherit;
+      font-weight: 700;
+      letter-spacing: normal;
+      text-transform: none;
+      color: #f1f5f9;
     }
 
     @media (max-width: 700px) {
@@ -848,13 +857,37 @@
         </select>
       </div>
 
+      <div class="form-group">
+        <label for="period-preset">Period Covered</label>
+        <select id="period-preset" onchange="onPeriodPresetChange()">
+          <option value="30d">Last 30 days</option>
+          <option value="3m">Last 3 months</option>
+          <option value="6m" selected>Last 6 months</option>
+          <option value="12m">Last 12 months</option>
+          <option value="custom">Custom range…</option>
+        </select>
+      </div>
+
+      <div id="custom-range" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1.1rem">
+          <div>
+            <label for="date-from">From</label>
+            <input type="date" id="date-from" />
+          </div>
+          <div>
+            <label for="date-to">To</label>
+            <input type="date" id="date-to" />
+          </div>
+        </div>
+      </div>
+
       <button class="generate-btn" id="generate-btn" onclick="generateReport()">
         <span id="btn-icon">⚡</span>
         <span id="btn-text">Generate Flash Report</span>
       </button>
 
       <div class="info-row">
-        <span style="font-size:0.72rem;color:var(--text-muted)">Powered by Osiris AI · Last 6 months of threat intelligence</span>
+        <span style="font-size:0.72rem;color:var(--text-muted)" id="period-hint">Powered by Osiris AI · Last 6 months of threat intelligence</span>
       </div>
     </div>
 
@@ -988,15 +1021,59 @@ document.getElementById('modal-api-key').addEventListener('keydown', function(e)
   if (e.key === 'Enter') saveApiKey();
 });
 
+// ── Period helpers ─────────────────────────────────────────────────────────
+function onPeriodPresetChange() {
+  const preset = document.getElementById('period-preset').value;
+  const custom = document.getElementById('custom-range');
+  const hint = document.getElementById('period-hint');
+  custom.style.display = preset === 'custom' ? 'block' : 'none';
+
+  if (preset !== 'custom') {
+    const labels = { '30d': 'Last 30 days', '3m': 'Last 3 months', '6m': 'Last 6 months', '12m': 'Last 12 months' };
+    hint.textContent = `Powered by Osiris AI · ${labels[preset]} of threat intelligence`;
+  } else {
+    hint.textContent = 'Powered by Osiris AI · Custom period';
+    // Default custom dates: today back 6 months
+    const to = new Date();
+    const from = new Date();
+    from.setMonth(from.getMonth() - 6);
+    document.getElementById('date-to').value = to.toISOString().slice(0, 10);
+    document.getElementById('date-from').value = from.toISOString().slice(0, 10);
+  }
+}
+
+function getSelectedPeriod() {
+  const preset = document.getElementById('period-preset').value;
+  const now = new Date();
+  const fmt = d => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  if (preset === 'custom') {
+    const from = document.getElementById('date-from').value;
+    const to = document.getElementById('date-to').value;
+    if (!from || !to) return { label: 'Custom period', start: null, end: null };
+    const s = new Date(from), e = new Date(to);
+    return { label: `${fmt(s)} – ${fmt(e)}`, start: s, end: e };
+  }
+
+  const end = new Date(now);
+  const start = new Date(now);
+  if (preset === '30d') start.setDate(start.getDate() - 30);
+  else if (preset === '3m') start.setMonth(start.getMonth() - 3);
+  else if (preset === '6m') start.setMonth(start.getMonth() - 6);
+  else if (preset === '12m') start.setFullYear(start.getFullYear() - 1);
+
+  return { label: `${fmt(start)} – ${fmt(end)}`, start, end };
+}
+
 // ── Report Generation ──────────────────────────────────────────────────────
-function buildPrompt(geography, sector, focus) {
+function buildPrompt(geography, sector, focus, period) {
   return `You are a senior cybersecurity intelligence analyst producing a SITREP (Situation Report) for C-suite executives, board members, and senior business leaders.
 
 REPORT PARAMETERS:
 - Geography: ${geography}
 - Sector: ${sector}
 - Focus: ${focus}
-- Time Period: Last 6 months (relative to your knowledge cutoff)
+- Time Period: ${period.label}
 
 AUDIENCE: CEOs, CFOs, Board Members, and Senior Business Leaders — NOT technical security teams.
 
@@ -1101,7 +1178,7 @@ Populate the following metadata fields based on the report content and parameter
 
 - **Classification:** [TLP level and description — e.g., TLP:AMBER — Restricted to recipient organisation and its security teams]
 - **Date:** [Today's report publication date]
-- **Period Covered:** [Six-month date range this report covers]
+- **Period Covered:** ${period.label}
 - **Confidence:** [HIGH / MEDIUM / LOW — based on source quality and corroboration of events cited]
 - **Prepared by:** CyberFlash Intelligence Team
 - **Prepared for:** ${sector} sector executive leadership, ${geography}
@@ -1169,6 +1246,7 @@ async function generateReport() {
   const geography = document.getElementById('geography').value;
   const sector = document.getElementById('sector').value;
   const focus = document.getElementById('risk-level').value;
+  const period = getSelectedPeriod();
 
   isGenerating = true;
   currentController = new AbortController();
@@ -1194,7 +1272,7 @@ async function generateReport() {
         messages: [
           {
             role: 'user',
-            content: buildPrompt(geography, sector, focus)
+            content: buildPrompt(geography, sector, focus, period)
           }
         ],
         temperature: 0.3,
@@ -1219,7 +1297,7 @@ async function generateReport() {
 
     if (!content) throw new Error('Empty response from API');
 
-    renderReport(content, geography, sector, focus);
+    renderReport(content, geography, sector, focus, period);
     setState('report');
 
   } catch (err) {
@@ -1281,9 +1359,9 @@ function markdownToHtml(text) {
   // H4 sub-subsection headers
   t = t.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
 
-  // Bullet lists (handle nested - items starting with spaces)
-  t = t.replace(/^[ \t]*[-•]\s+(.+)$/gm, '<li>$1</li>');
-  t = t.replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>');
+  // Bullet lists — apply inline formatting to content
+  t = t.replace(/^[ \t]*[-•]\s+(.+)$/gm, (_, c) => `<li>${inlineFormat(c)}</li>`);
+  t = t.replace(/^(\d+)\.\s+(.+)$/gm, (_, _n, c) => `<li>${inlineFormat(c)}</li>`);
   // Wrap consecutive <li> in <ul>
   t = t.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
 
@@ -1312,7 +1390,7 @@ function inlineFormat(s) {
     .replace(/`(.+?)`/g, '<code>$1</code>');
 }
 
-function renderReport(content, geography, sector, focus) {
+function renderReport(content, geography, sector, focus, period) {
   const sections = parseMarkdownSections(content);
 
   // Header
@@ -1321,7 +1399,7 @@ function renderReport(content, geography, sector, focus) {
   document.getElementById('report-title').textContent =
     `${sector} Sector — ${geography}`;
   document.getElementById('report-subtitle').textContent =
-    `Cybersecurity Flash Report · ${dateStr} · Based on threat intelligence from the last 6 months`;
+    `Cybersecurity SITREP · ${dateStr} · Period covered: ${period.label}`;
 
   // Tags
   const tagsEl = document.getElementById('report-tags');
@@ -1356,7 +1434,7 @@ function renderReport(content, geography, sector, focus) {
   document.getElementById('report-meta-summary').innerHTML = `
     <strong style="color:var(--text)">${geography}</strong><br>
     ${sector}<br>
-    <span style="color:var(--text-muted);font-size:0.75rem">${dateStr}</span>
+    <span style="color:var(--text-muted);font-size:0.75rem">${period.label}</span>
   `;
 }
 
