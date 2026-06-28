@@ -832,6 +832,11 @@
         <label for="sector">Sector</label>
         <select id="sector">
           <option value="All Sectors">All Sectors</option>
+          <optgroup label="── Categories ──">
+            <option value="cat:Critical Infrastructure">Critical Infrastructure (all)</option>
+            <option value="cat:Technology">Technology (all)</option>
+            <option value="cat:Enterprise">Enterprise (all)</option>
+          </optgroup>
           <optgroup label="Critical Infrastructure">
             <option value="Financial Services & Banking">Financial Services & Banking</option>
             <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
@@ -1108,6 +1113,45 @@ document.getElementById('modal-api-key').addEventListener('keydown', function(e)
   if (e.key === 'Enter') saveApiKey();
 });
 
+// ── Sector helpers ─────────────────────────────────────────────────────────
+const SECTOR_CATEGORIES = {
+  'Critical Infrastructure': [
+    'Financial Services & Banking',
+    'Healthcare & Life Sciences',
+    'Energy & Utilities',
+    'Telecommunications',
+    'Transportation & Logistics',
+    'Government & Defense',
+    'Water & Wastewater',
+  ],
+  'Technology': [
+    'Technology & Software',
+    'Cloud & SaaS Providers',
+    'Semiconductor & Hardware',
+  ],
+  'Enterprise': [
+    'Retail & E-Commerce',
+    'Manufacturing & Industrial',
+    'Media & Entertainment',
+    'Education',
+    'Legal & Professional Services',
+    'Insurance',
+    'Real Estate',
+  ],
+};
+
+function resolveSector(value) {
+  if (value.startsWith('cat:')) {
+    const cat = value.slice(4);
+    const sectors = SECTOR_CATEGORIES[cat] || [];
+    return {
+      label: `${cat} (all sectors)`,
+      prompt: `All ${cat} sectors, specifically: ${sectors.join(', ')}`,
+    };
+  }
+  return { label: value, prompt: value };
+}
+
 // ── Period helpers ─────────────────────────────────────────────────────────
 function onPeriodPresetChange() {
   const preset = document.getElementById('period-preset').value;
@@ -1331,7 +1375,8 @@ async function generateReport() {
   }
 
   const geography = document.getElementById('geography').value;
-  const sector = document.getElementById('sector').value;
+  const sectorRaw = document.getElementById('sector').value;
+  const sector = resolveSector(sectorRaw);
   const focus = document.getElementById('risk-level').value;
   const period = getSelectedPeriod();
 
@@ -1359,7 +1404,7 @@ async function generateReport() {
         messages: [
           {
             role: 'user',
-            content: buildPrompt(geography, sector, focus, period)
+            content: buildPrompt(geography, sector.prompt, focus, period)
           }
         ],
         temperature: 0.3,
@@ -1386,7 +1431,7 @@ async function generateReport() {
 
     lastRawContent = content;
     lastReportParams = { geography, sector, focus, period };
-    renderReport(content, geography, sector, focus, period);
+    renderReport(content, geography, sector.label, focus, period);
     setState('report');
 
   } catch (err) {
@@ -1694,7 +1739,7 @@ function safeBody(text) {
 function exportKovaMarkdown() {
   if (!lastRawContent) return;
   const { geography, sector, focus, period } = lastReportParams;
-  const kova = buildKovaSlides(lastRawContent, geography, sector, focus, period);
+  const kova = buildKovaSlides(lastRawContent, geography, sector.label, focus, period);
 
   const dateSlug = new Date().toISOString().slice(0, 10);
   const nameSlug = `${geography}-${sector}`.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
