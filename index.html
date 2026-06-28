@@ -726,6 +726,8 @@
       .section, .report-header, .card { border-color: #ddd; }
       .report-header { page-break-after: always; break-after: page; }
       .section { page-break-before: always; break-before: page; }
+      .section-content h3 { page-break-before: always; break-before: page; }
+      .section-content h3:first-child { page-break-before: avoid; break-before: avoid; }
     }
   </style>
 </head>
